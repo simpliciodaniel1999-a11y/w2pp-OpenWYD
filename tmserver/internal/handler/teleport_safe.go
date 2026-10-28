@@ -5,15 +5,16 @@ import (
 	"github.com/jeanluca/w2pp-openwyd/tmserver/internal/route"
 )
 
-// teleportRegion is an optional inclusive rectangle that keeps a fallback
-// destination inside the map/platform that authorized the teleport.
+// teleportRegion representa um retângulo inclusivo opcional que mantém o
+// destino alternativo dentro do mapa ou da plataforma que autorizou o teleporte.
 type teleportRegion struct {
 	MinX, MinY, MaxX, MaxY int
 }
 
-// nearestTeleportCell finds the closest unoccupied, unblocked cell within
-// maxDistance (Euclidean distance). Equal-distance ties are deterministic
-// (top-to-bottom, then left-to-right). A nil region permits any in-bounds cell.
+// nearestTeleportCell procura a célula livre e não bloqueada mais próxima,
+// dentro de maxDistance, usando distância euclidiana. Empates são resolvidos
+// de forma determinística: de cima para baixo e, depois, da esquerda para a direita.
+// Com region nil, qualquer célula dentro dos limites do mapa pode ser considerada.
 func nearestTeleportCell(
 	heights *content.Grid,
 	targetX, targetY, maxDistance int,
@@ -25,8 +26,8 @@ func nearestTeleportCell(
 		return 0, 0, false
 	}
 	dim := heights.Dim
-	// Distances larger than the grid dimension cannot discover any additional
-	// in-bounds cells; cap it to avoid overflow in coordinate and square math.
+	// Um raio maior que a dimensão do mapa não encontra células adicionais.
+	// Limitá-lo também evita estouro nos cálculos de coordenadas e distância.
 	if maxDistance > dim {
 		maxDistance = dim
 	}
@@ -46,15 +47,31 @@ func nearestTeleportCell(
 	found := false
 	minX, maxX := targetX-maxDistance, targetX+maxDistance
 	minY, maxY := targetY-maxDistance, targetY+maxDistance
-	if minX < 0 { minX = 0 }
-	if minY < 0 { minY = 0 }
-	if maxX >= dim { maxX = dim-1 }
-	if maxY >= dim { maxY = dim-1 }
+	if minX < 0 {
+		minX = 0
+	}
+	if minY < 0 {
+		minY = 0
+	}
+	if maxX >= dim {
+		maxX = dim - 1
+	}
+	if maxY >= dim {
+		maxY = dim - 1
+	}
 	if region != nil {
-		if minX < region.MinX { minX = region.MinX }
-		if minY < region.MinY { minY = region.MinY }
-		if maxX > region.MaxX { maxX = region.MaxX }
-		if maxY > region.MaxY { maxY = region.MaxY }
+		if minX < region.MinX {
+			minX = region.MinX
+		}
+		if minY < region.MinY {
+			minY = region.MinY
+		}
+		if maxX > region.MaxX {
+			maxX = region.MaxX
+		}
+		if maxY > region.MaxY {
+			maxY = region.MaxY
+		}
 	}
 	for y := minY; y <= maxY; y++ {
 		for x := minX; x <= maxX; x++ {
@@ -63,8 +80,9 @@ func nearestTeleportCell(
 			if distance > maxDistance*maxDistance || distance > bestDistance {
 				continue
 			}
-			// BASE_ApplyAttribute bakes AttributeMap bit 2 into HeightMap
-			// as route.Blocked (127); heights are signed bytes in the legacy.
+			// BASE_ApplyAttribute grava route.Blocked (127) na grade de alturas
+			// para representar células bloqueadas. Os valores são bytes com sinal
+			// na lógica legada.
 			if int(int8(heights.At(x, y))) == route.Blocked || occupied(x, y) {
 				continue
 			}
