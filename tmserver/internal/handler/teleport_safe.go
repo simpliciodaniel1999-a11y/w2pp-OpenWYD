@@ -25,6 +25,11 @@ func nearestTeleportCell(
 		return 0, 0, false
 	}
 	dim := heights.Dim
+	// Distances larger than the grid dimension cannot discover any additional
+	// in-bounds cells; cap it to avoid overflow in coordinate and square math.
+	if maxDistance > dim {
+		maxDistance = dim
+	}
 	if targetX < 0 || targetY < 0 || targetX >= dim || targetY >= dim {
 		return 0, 0, false
 	}
