@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"math"
-
 	"github.com/jeanluca/w2pp-openwyd/tmserver/internal/content"
 	"github.com/jeanluca/w2pp-openwyd/tmserver/internal/route"
 )
@@ -39,7 +37,7 @@ func nearestTeleportCell(
 	}
 
 	bestX, bestY := 0, 0
-	bestDistance := math.MaxInt
+	bestDistance := int(^uint(0) >> 1)
 	found := false
 	minX, maxX := targetX-maxDistance, targetX+maxDistance
 	minY, maxY := targetY-maxDistance, targetY+maxDistance
