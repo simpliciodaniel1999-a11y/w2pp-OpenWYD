@@ -9,6 +9,30 @@ import (
 
 func teleportTestHeights(dim int) *content.Grid {
 	return &content.Grid{Dim: dim, Data: make([]byte, dim*dim)}
+
+	t.Run("blocked terrain is skipped", func(t *testing.T) {
+		h := teleportTestHeights(5)
+		for y := 1; y <= 3; y++ {
+			for x := 1; x <= 3; x++ {
+				h.Data[y*5+x] = route.Blocked
+			}
+		}
+		x, y, ok := nearestTeleportCell(h, 2, 2, 2, nil, func(x, y int) bool { return false })
+		if !ok || (x >= 1 && x <= 3 && y >= 1 && y <= 3) {
+			t.Fatalf("got (%d,%d,%v), want an unblocked cell outside blocked patch", x, y, ok)
+		}
+	})
+	t.Run("invalid target and region are rejected", func(t *testing.T) {
+		h := teleportTestHeights(5)
+		occupied := func(x, y int) bool { return false }
+		if _, _, ok := nearestTeleportCell(h, -1, 0, 2, nil, occupied); ok {
+			t.Fatal("out-of-bounds target unexpectedly accepted")
+		}
+		region := &teleportRegion{MinX: 3, MinY: 3, MaxX: 2, MaxY: 4}
+		if _, _, ok := nearestTeleportCell(h, 2, 2, 2, region, occupied); ok {
+			t.Fatal("invalid region unexpectedly accepted")
+		}
+	})
 }
 
 func TestNearestTeleportCell(t *testing.T) {
