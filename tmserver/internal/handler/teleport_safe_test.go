@@ -15,7 +15,7 @@ func TestNearestTeleportCell(t *testing.T) {
 	t.Run("célula válida mais próxima", func(t *testing.T) {
 		h := teleportTestHeights(9)
 		h.Data[4*9+4] = route.Blocked
-		x, y, ok := nearestTeleportCell(h, 4, 4, 3, nil, func(x, y int) bool { return false })
+		x, y, ok := nearestTeleportCell(h, 4, 4, 3, nil, func(_, _ int) bool { return false })
 		if !ok || x != 4 || y != 3 {
 			t.Fatalf("recebido (%d,%d,%v), esperado (4,3,true)", x, y, ok)
 		}
@@ -31,7 +31,7 @@ func TestNearestTeleportCell(t *testing.T) {
 
 	t.Run("nenhum espaço livre no raio", func(t *testing.T) {
 		h := teleportTestHeights(5)
-		x, y, ok := nearestTeleportCell(h, 2, 2, 1, nil, func(x, y int) bool { return true })
+		x, y, ok := nearestTeleportCell(h, 2, 2, 1, nil, func(_, _ int) bool { return true })
 		if ok {
 			t.Fatalf("recebido (%d,%d,true), esperado nenhuma célula", x, y)
 		}
@@ -39,7 +39,7 @@ func TestNearestTeleportCell(t *testing.T) {
 
 	t.Run("limites do mapa", func(t *testing.T) {
 		h := teleportTestHeights(5)
-		x, y, ok := nearestTeleportCell(h, 0, 0, 2, nil, func(x, y int) bool { return false })
+		x, y, ok := nearestTeleportCell(h, 0, 0, 2, nil, func(_, _ int) bool { return false })
 		if !ok || x != 0 || y != 0 {
 			t.Fatalf("recebido (%d,%d,%v), esperado (0,0,true)", x, y, ok)
 		}
@@ -52,7 +52,7 @@ func TestNearestTeleportCell(t *testing.T) {
 				h.Data[y*5+x] = byte(route.Blocked)
 			}
 		}
-		x, y, ok := nearestTeleportCell(h, 2, 2, 2, nil, func(x, y int) bool { return false })
+		x, y, ok := nearestTeleportCell(h, 2, 2, 2, nil, func(_, _ int) bool { return false })
 		if !ok || (x >= 1 && x <= 3 && y >= 1 && y <= 3) {
 			t.Fatalf("recebido (%d,%d,%v), esperado célula livre fora da área bloqueada", x, y, ok)
 		}
@@ -62,7 +62,7 @@ func TestNearestTeleportCell(t *testing.T) {
 		h := teleportTestHeights(9)
 		region := &teleportRegion{MinX: 4, MinY: 4, MaxX: 6, MaxY: 6}
 		h.Data[4*9+4] = byte(route.Blocked)
-		x, y, ok := nearestTeleportCell(h, 4, 4, 3, region, func(x, y int) bool { return false })
+		x, y, ok := nearestTeleportCell(h, 4, 4, 3, region, func(_, _ int) bool { return false })
 		if !ok || x < region.MinX || x > region.MaxX || y < region.MinY || y > region.MaxY {
 			t.Fatalf("recebido (%d,%d,%v), esperado célula dentro da região", x, y, ok)
 		}
@@ -70,7 +70,7 @@ func TestNearestTeleportCell(t *testing.T) {
 
 	t.Run("destino e região inválidos são rejeitados", func(t *testing.T) {
 		h := teleportTestHeights(5)
-		ocupada := func(x, y int) bool { return false }
+		ocupada := func(_, _ int) bool { return false }
 		if _, _, ok := nearestTeleportCell(h, -1, 0, 2, nil, ocupada); ok {
 			t.Fatal("destino fora do mapa foi aceito")
 		}
