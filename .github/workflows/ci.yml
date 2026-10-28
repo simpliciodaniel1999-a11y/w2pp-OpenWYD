@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [main, 'feat/teleport-safe-cell-resolver']
   pull_request:
