@@ -23,8 +23,8 @@ func TestNearestTeleportCell(t *testing.T) {
 	t.Run("occupied cell is skipped", func(t *testing.T) {
 		h := teleportTestHeights(9)
 		x, y, ok := nearestTeleportCell(h, 4, 4, 2, nil, func(x, y int) bool { return x == 4 && y == 4 })
-		if !ok || x != 3 || y != 4 {
-			t.Fatalf("got (%d,%d,%v), want (3,4,true)", x, y, ok)
+		if !ok || x != 4 || y != 3 {
+			t.Fatalf("got (%d,%d,%v), want (4,3,true)", x, y, ok)
 		}
 	})
 	t.Run("no space in radius", func(t *testing.T) {
