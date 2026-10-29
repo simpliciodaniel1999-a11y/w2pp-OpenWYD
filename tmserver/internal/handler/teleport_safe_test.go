@@ -80,3 +80,27 @@ func TestNearestTeleportCell(t *testing.T) {
 		}
 	})
 }
+
+func TestNippleheimLandingFallbackStaysInsidePlatform(t *testing.T) {
+	h := teleportTestHeights(4096)
+	region := &teleportRegion{MinX: 3650, MinY: 3110, MaxX: 3652, MaxY: 3112}
+
+	// Make the original landing tile both blocked and occupied; the selected
+	// fallback must remain on the legacy 3x3 Nippleheim platform.
+	h.Data[3111*h.Dim+3651] = route.Blocked
+	x, y, ok := nearestTeleportCell(h, 3651, 3111, 3, region, func(cx, cy int) bool {
+		return cx == 3650 && cy == 3111
+	})
+	if !ok {
+		t.Fatal("expected a safe cell inside the Nippleheim platform")
+	}
+	if x < 3650 || x > 3652 || y < 3110 || y > 3112 {
+		t.Fatalf("fallback escaped the Nippleheim platform: (%d,%d)", x, y)
+	}
+	if x == 3651 && y == 3111 {
+		t.Fatal("fallback selected the blocked original destination")
+	}
+	if x == 3650 && y == 3111 {
+		t.Fatal("fallback selected an occupied cell")
+	}
+}
