@@ -232,11 +232,13 @@ func (d *Dispatcher) reqTeleport(w *world.World, s *world.Session, _ protocol.He
 	if e == nil || e.HP <= 0 {
 		return
 	}
-	// GetFunc.cpp:1007: the city opens only after the boss is defeated.
+	// GetFunc.cpp:1007: the desert entrance is available while the Kefra
+	// encounter is active. The legacy KefraLive gate must not be inverted into
+	// "boss already defeated", or players cannot enter the map to fight Kefra.
 	if e.X&^3 == 2364 && e.Y&^3 == 3924 {
 		st, loaded := w.KefraState()
-		if !loaded || !st.Defeated {
-			d.log.Warn("teleport rejected: Kefra portal is closed", "conn", s.Conn, "x", e.X, "y", e.Y, "state_loaded", loaded, "defeated", st.Defeated)
+		if !loaded || st.Defeated {
+			d.log.Warn("teleport rejected: Kefra encounter is unavailable", "conn", s.Conn, "x", e.X, "y", e.Y, "state_loaded", loaded, "defeated", st.Defeated)
 			return
 		}
 		x := 3250 + int16(w.Rand().Intn(3))
