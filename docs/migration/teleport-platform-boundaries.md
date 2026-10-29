@@ -106,3 +106,11 @@ Esse problema deve ser investigado separadamente da validação de células segu
 5. Só depois de identificar a causa, corrigir a rota ou condição específica e validar que a correção não muda os destinos válidos existentes.
 
 **Nota:** a lista de rotas marcadas como “Ausente” neste documento contém candidatas à comparação, não uma confirmação de que cada uma delas corresponde a um portal relatado como defeituoso.
+
+
+### Relatos concretos para reprodução
+
+- **Erion:** há vários portais na cidade; um deles não funciona corretamente. A coordenada exata e o destino esperado ainda precisam ser identificados. Não assumir que é o portal principal de Erion (2452,1988) → (1989,1755) sem reproduzir e confirmar no jogo.
+- **Entrada de Kefra:** o acesso/portal de entrada não funciona corretamente. É necessário confirmar qual portal específico está sendo acionado e em que estado se encontra o evento de Kefra. O código legado registra um acesso ao Hall de Kefra em (2364,3892) → (2364,3906), com consumo de ticket, e outras rotas relacionadas ao deserto/Kefra; isso não basta para concluir que esse é o ponto exato relatado.
+
+Prioridade de depuração: reproduzir os dois casos separadamente, registrar coordenada de origem, destino esperado, item/ticket necessário e estado do evento; então rastrear reconhecimento da rota, condições, execução de `doTeleport` e atualização enviada ao cliente. Não aplicar correção genérica nem inferir coordenadas sem confirmação.
