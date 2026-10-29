@@ -97,3 +97,47 @@ func TestTeleportDestKefraRequiresDefeat(t *testing.T) {
 		}
 	}
 }
+
+func TestTeleportDestKefraHallExit(t *testing.T) {
+	// Legacy GetFunc.cpp: (1312,1900) -> (2366+rand()%2,4073+rand()%2).
+	for ox := int16(0); ox < 4; ox++ {
+		for oy := int16(0); oy < 4; oy++ {
+			x, y := int16(1312)+ox, int16(1900)+oy
+			dx, dy, cost, ok := TeleportDestWithAccess(x, y, TeleportAccess{}, rng.NewSeeded(1))
+			if !ok || cost != 0 || dx < 2366 || dx > 2367 || dy < 4073 || dy > 4074 {
+				t.Errorf("Hall exit at (%d,%d) = (%d,%d), cost=%d, ok=%v; want x=2366..2367 y=4073..4074, free", x, y, dx, dy, cost, ok)
+			}
+		}
+	}
+	for _, p := range [][2]int16{{1311, 1900}, {1316, 1900}, {1312, 1899}, {1312, 1904}} {
+		if _, _, _, ok := TeleportDest(p[0], p[1]); ok {
+			t.Errorf("non-portal %v resolved a route", p)
+		}
+	}
+}
+
+func TestTeleportDestAzranSecondaryPortal(t *testing.T) {
+	// Legacy GetTeleportPosition: Azran secondary portal → Azran Field.
+	for ox := int16(0); ox < 4; ox++ {
+		for oy := int16(0); oy < 4; oy++ {
+			x, y := int16(2452)+ox, int16(1716)+oy
+			dx, dy, cost, ok := TeleportDest(x, y)
+			if !ok || cost != 0 || dx < 1969 || dx > 1971 || dy < 1711 || dy > 1713 {
+				t.Errorf("Azran secondary portal at (%d,%d) = (%d,%d), cost=%d, ok=%v", x, y, dx, dy, cost, ok)
+			}
+		}
+	}
+}
+
+// Legacy GetFunc.cpp: desert portal (2364,4072) -> Kefra Hall (1314+rand%2,1900+rand%2).
+func TestTeleportDestDesertToKefraHall(t *testing.T) {
+	for ox := int16(0); ox < 4; ox++ {
+		for oy := int16(0); oy < 4; oy++ {
+			x, y := int16(2364)+ox, int16(4072)+oy
+			dx, dy, cost, ok := TeleportDestWithAccess(x, y, TeleportAccess{}, rng.NewSeeded(1))
+			if !ok || cost != 0 || dx < 1314 || dx > 1315 || dy < 1900 || dy > 1901 {
+				t.Errorf("Desert-to-Kefra portal at (%d,%d) = (%d,%d), cost=%d, ok=%v; want x=1314..1315 y=1900..1901, free", x, y, dx, dy, cost, ok)
+			}
+		}
+	}
+}

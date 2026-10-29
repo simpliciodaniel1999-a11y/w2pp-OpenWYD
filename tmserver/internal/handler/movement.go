@@ -232,10 +232,12 @@ func (d *Dispatcher) reqTeleport(w *world.World, s *world.Session, _ protocol.He
 	if e == nil || e.HP <= 0 {
 		return
 	}
-	// GetFunc.cpp:1007: the city opens only after the boss is defeated.
+	// GetFunc.cpp:1007: the desert portal opens after Kefra is defeated.
+	// In the world state, KefraLive is represented as KefraState.Defeated.
 	if e.X&^3 == 2364 && e.Y&^3 == 3924 {
 		st, loaded := w.KefraState()
 		if !loaded || !st.Defeated {
+			d.log.Warn("teleport rejected: Kefra encounter is unavailable", "conn", s.Conn, "x", e.X, "y", e.Y, "state_loaded", loaded, "defeated", st.Defeated)
 			return
 		}
 		x := 3250 + int16(w.Rand().Intn(3))
@@ -247,6 +249,7 @@ func (d *Dispatcher) reqTeleport(w *world.World, s *world.Session, _ protocol.He
 	// rejected requests out of the MSVC stream; successful entries draw X then Y.
 	if e.X&^3 == 2364 && e.Y&^3 == 3892 {
 		if e.KefraTicket <= 0 {
+			d.log.Warn("teleport rejected: no Kefra Hall entries remaining", "conn", s.Conn, "x", e.X, "y", e.Y, "kefra_ticket", e.KefraTicket)
 			return
 		}
 		e.KefraTicket--
@@ -264,13 +267,41 @@ func (d *Dispatcher) reqTeleport(w *world.World, s *world.Session, _ protocol.He
 	}
 	destX, destY, cost, ok := world.TeleportDestWithAccess(e.X, e.Y, access, w.Rand())
 	if !ok {
-		return // no teleport tile here
+		d.log.Warn("teleport request did not match a route or access condition", "conn", s.Conn, "x", e.X, "y", e.Y, "tile_x", e.X&^3, "tile_y", e.Y&^3, "kefra_ticket", e.KefraTicket, "has_fairy", access.HasFairy, "kefra_defeated", access.KefraDefeated)
+		return // no teleport tile here, or a route's access condition rejected it
 	}
-	if cost > 0 {
-		if cost > e.Coin {
-			d.sendClientMessage(w, s, notEnoughMoney) // _MSG_ReqTeleport.cpp:39-64
+	if cost > 0 && cost > e.Coin {
+		d.sendClientMessage(w, s, notEnoughMoney) // _MSG_ReqTeleport.cpp:39-64
+		return
+	}
+
+	// Noatum -> Nippleheim: if the legacy landing tile is blocked or occupied,
+	// choose a nearby usable cell but never leave the original 3x3 platform.
+	// When maps aren't mounted, preserve the legacy landing instead of inventing
+	// walkability data.
+	if e.X&^3 == 1052 && e.Y&^3 == 1708 && d.heights != nil {
+		region := &teleportRegion{MinX: 3650, MinY: 3110, MaxX: 3652, MaxY: 3112}
+		safeX, safeY, ok := nearestTeleportCell(
+			d.heights, int(destX), int(destY), 3, region,
+			func(x, y int) bool {
+				for id := 1; id < world.MaxMob; id++ {
+					other := w.Entity(id)
+					if other != nil && other.Mode != world.MobEmpty &&
+						int(other.X) == x && int(other.Y) == y {
+						return true
+					}
+				}
+				return false
+			},
+		)
+		if !ok {
+			d.log.Warn("teleport rejected: no free Nippleheim landing cell", "conn", s.Conn, "x", destX, "y", destY)
 			return
 		}
+		destX, destY = int16(safeX), int16(safeY)
+	}
+
+	if cost > 0 {
 		e.Coin -= cost
 		d.sendEtc(w, s, e)
 	}

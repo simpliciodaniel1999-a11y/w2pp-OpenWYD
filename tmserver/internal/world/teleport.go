@@ -20,11 +20,14 @@ var teleportTable = map[[2]int16]teleRoute{
 	{2116, 2100}: {1044, 1724, 700}, // Armia → Noatum
 	{2480, 1716}: {1044, 1716, 700}, // Azran → Noatum
 	{2456, 2016}: {1044, 1708, 700}, // Erion → Noatum
+	{2452, 1716}: {1969, 1711, 0},   // Azran → Azran Field (legacy secondary portal)
 	{1044, 1724}: {2116, 2100, 0},   // Noatum → Armia
 	{1044, 1716}: {2480, 1716, 0},   // Noatum → Azran
 	{1044, 1708}: {2456, 2016, 0},   // Noatum → Erion
 	{2548, 1740}: {2281, 3688, 0},   // Azran → Vale (Fada do Vale, item 3916)
 	{2364, 3924}: {3250, 1703, 0},   // Deserto → Kefra (Kefra defeated)
+	{2364, 4072}: {1314, 1900, 0},   // Deserto → Hall de Kefra
+	{1312, 1900}: {2366, 4073, 0},   // Saída do Hall de Kefra
 	{1052, 1708}: {3650, 3110, 0},   // Noatum → Nippleheim
 	{3648, 3108}: {1054, 1710, 0},   // Nippleheim → Noatum
 	// Fields / dungeons (subset of GetTeleportPosition).
@@ -71,14 +74,20 @@ func teleportDest(x, y int16, access TeleportAccess, random *rng.MSVC) (destX, d
 	tile := [2]int16{x &^ 3, y &^ 3} // round down to a multiple of 4
 	r, found := teleportTable[tile]
 	vale, kefra := tile == [2]int16{2548, 1740}, tile == [2]int16{2364, 3924}
+	kefraHallExit := tile == [2]int16{1312, 1900}
+	kefraReturn := tile == [2]int16{2364, 4072}
 	if !found || (vale && !access.HasFairy) || (kefra && !access.KefraDefeated) {
 		return 0, 0, 0, false
 	}
-	spread := func() int { return rand.Intn(3) }
+	spreadLimit := 3
+	if kefraHallExit || kefraReturn {
+		spreadLimit = 2
+	}
+	spread := func() int { return rand.Intn(spreadLimit) }
 	// Keep existing route randomness unchanged; the Vale and Kefra branches are
 	// the ones newly ported from the legacy path and use the world's MSVC stream.
-	if random != nil && (vale || kefra) {
-		spread = func() int { return random.Intn(3) }
+	if random != nil && (vale || kefra || kefraHallExit || kefraReturn) {
+		spread = func() int { return random.Intn(spreadLimit) }
 	}
 	return r.dx + int16(spread()), r.dy + int16(spread()), r.cost, true
 }
