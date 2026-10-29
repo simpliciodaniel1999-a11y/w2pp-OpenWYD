@@ -97,3 +97,16 @@ func TestTeleportDestKefraRequiresDefeat(t *testing.T) {
 		}
 	}
 }
+
+func TestTeleportDestErionSecondaryPortal(t *testing.T) {
+	// Legacy GetTeleportPosition: Erion secondary portal → Azran Field.
+	for ox := int16(0); ox < 4; ox++ {
+		for oy := int16(0); oy < 4; oy++ {
+			x, y := int16(2452)+ox, int16(1988)+oy
+			dx, dy, cost, ok := TeleportDest(x, y)
+			if !ok || cost != 0 || dx < 1989 || dx > 1991 || dy < 1755 || dy > 1757 {
+				t.Errorf("Erion secondary portal at (%d,%d) = (%d,%d), cost=%d, ok=%v", x, y, dx, dy, cost, ok)
+			}
+		}
+	}
+}
