@@ -114,3 +114,15 @@ Esse problema deve ser investigado separadamente da validação de células segu
 - **Entrada de Kefra:** o acesso/portal de entrada não funciona corretamente. É necessário confirmar qual portal específico está sendo acionado e em que estado se encontra o evento de Kefra. O código legado registra um acesso ao Hall de Kefra em (2364,3892) → (2364,3906), com consumo de ticket, e outras rotas relacionadas ao deserto/Kefra; isso não basta para concluir que esse é o ponto exato relatado.
 
 Prioridade de depuração: reproduzir os dois casos separadamente, registrar coordenada de origem, destino esperado, item/ticket necessário e estado do evento; então rastrear reconhecimento da rota, condições, execução de `doTeleport` e atualização enviada ao cliente. Não aplicar correção genérica nem inferir coordenadas sem confirmação.
+
+
+## Diagnóstico após reproduzir os relatos
+
+O relato do usuário esclarece que, tanto no portal de Erion quanto na entrada de Kefra, **não acontece nada**. A investigação no código encontrou um candidato concreto para Erion e adicionou instrumentação para identificar o caminho de Kefra:
+
+- **Portal secundário de Erion:** o legado `GetTeleportPosition` contém a origem `(2452,1988)` com destino-base `(1989,1755)` e dispersão de `0..2` em cada eixo. Essa rota estava ausente de `tmserver/internal/world/teleport.go`. A rota foi portada e recebeu teste cobrindo todas as 16 posições dentro do tile de origem e a faixa de destinos.
+- **Entrada do Hall de Kefra:** o legado só teleporta da origem `(2364,3892)` quando `KefraTicket > 0`, descontando uma entrada e enviando a contagem atualizada. O handler Go já tinha esse fluxo, mas retornava silenciosamente quando não havia entradas. Agora registra um aviso explícito nesse caso.
+- **Portal do deserto para Kefra:** também depende de o estado do Kefra estar carregado e marcado como derrotado. O handler agora registra quando esse acesso é rejeitado por estado ausente/fechado.
+- **Outras falhas de correspondência:** pedidos de teleporte que não correspondam a uma rota ou condição de acesso agora geram log com a posição atual, tile arredondado e dados relevantes de acesso. Isso deve revelar se o cliente está acionando o portal numa coordenada diferente da esperada.
+
+A rota de Erion foi corrigida com base direta na tabela legada; ainda precisa passar pela CI e ser reproduzida no cliente. Para Kefra, os logs vão distinguir uma falta de entradas, estado do evento fechado e coordenada de origem que não corresponde ao portal. Não alteramos as regras de acesso para permitir entrada sem ticket nem com Kefra vivo.
