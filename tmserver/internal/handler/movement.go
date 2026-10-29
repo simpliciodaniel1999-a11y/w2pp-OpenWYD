@@ -236,6 +236,7 @@ func (d *Dispatcher) reqTeleport(w *world.World, s *world.Session, _ protocol.He
 	if e.X&^3 == 2364 && e.Y&^3 == 3924 {
 		st, loaded := w.KefraState()
 		if !loaded || !st.Defeated {
+			d.log.Warn("teleport rejected: Kefra portal is closed", "conn", s.Conn, "x", e.X, "y", e.Y, "state_loaded", loaded, "defeated", st.Defeated)
 			return
 		}
 		x := 3250 + int16(w.Rand().Intn(3))
@@ -247,6 +248,7 @@ func (d *Dispatcher) reqTeleport(w *world.World, s *world.Session, _ protocol.He
 	// rejected requests out of the MSVC stream; successful entries draw X then Y.
 	if e.X&^3 == 2364 && e.Y&^3 == 3892 {
 		if e.KefraTicket <= 0 {
+			d.log.Warn("teleport rejected: no Kefra Hall entries remaining", "conn", s.Conn, "x", e.X, "y", e.Y, "kefra_ticket", e.KefraTicket)
 			return
 		}
 		e.KefraTicket--
@@ -264,7 +266,8 @@ func (d *Dispatcher) reqTeleport(w *world.World, s *world.Session, _ protocol.He
 	}
 	destX, destY, cost, ok := world.TeleportDestWithAccess(e.X, e.Y, access, w.Rand())
 	if !ok {
-		return // no teleport tile here
+		d.log.Warn("teleport request did not match a route or access condition", "conn", s.Conn, "x", e.X, "y", e.Y, "tile_x", e.X&^3, "tile_y", e.Y&^3, "kefra_ticket", e.KefraTicket, "has_fairy", access.HasFairy, "kefra_defeated", access.KefraDefeated)
+		return // no teleport tile here, or a route's access condition rejected it
 	}
 	if cost > 0 {
 		if cost > e.Coin {
