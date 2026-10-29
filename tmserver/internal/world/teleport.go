@@ -26,7 +26,7 @@ var teleportTable = map[[2]int16]teleRoute{
 	{1044, 1708}: {2456, 2016, 0},   // Noatum → Erion
 	{2548, 1740}: {2281, 3688, 0},   // Azran → Vale (Fada do Vale, item 3916)
 	{2364, 3924}: {3250, 1703, 0},   // Deserto → Kefra (Kefra defeated)
-	{2364, 4072}: {1314, 1900, 0},   // Kefra → Deserto
+	{2364, 4072}: {1314, 1900, 0},   // Deserto → Hall de Kefra
 	{1312, 1900}: {2366, 4073, 0},   // Saída do Hall de Kefra
 	{1052, 1708}: {3650, 3110, 0},   // Noatum → Nippleheim
 	{3648, 3108}: {1054, 1710, 0},   // Nippleheim → Noatum
