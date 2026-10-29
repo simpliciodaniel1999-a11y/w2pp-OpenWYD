@@ -110,7 +110,7 @@ Esse problema deve ser investigado separadamente da validação de células segu
 
 ### Relatos concretos para reprodução
 
-- **Erion:** há vários portais na cidade; um deles não funciona corretamente. A coordenada exata e o destino esperado ainda precisam ser identificados. Não assumir que é o portal principal de Erion (2452,1988) → (1989,1755) sem reproduzir e confirmar no jogo.
+- **Azran (correção do relato):** o portal que não funciona fica em Azran, não em Erion. O legado identifica um segundo teleporte de Azran em `(2452,1716)` → `(1969,1711)`, com dispersão de `0..2` em cada eixo. Essa rota estava ausente da tabela Go e foi portada/testada. Ainda precisa de reprodução no cliente para confirmar que é exatamente o portal relatado.
 - **Entrada de Kefra:** o acesso/portal de entrada não funciona corretamente. É necessário confirmar qual portal específico está sendo acionado e em que estado se encontra o evento de Kefra. O código legado registra um acesso ao Hall de Kefra em (2364,3892) → (2364,3906), com consumo de ticket, e outras rotas relacionadas ao deserto/Kefra; isso não basta para concluir que esse é o ponto exato relatado.
 
 Prioridade de depuração: reproduzir os dois casos separadamente, registrar coordenada de origem, destino esperado, item/ticket necessário e estado do evento; então rastrear reconhecimento da rota, condições, execução de `doTeleport` e atualização enviada ao cliente. Não aplicar correção genérica nem inferir coordenadas sem confirmação.
@@ -120,9 +120,14 @@ Prioridade de depuração: reproduzir os dois casos separadamente, registrar coo
 
 O relato do usuário esclarece que, tanto no portal de Erion quanto na entrada de Kefra, **não acontece nada**. A investigação no código encontrou um candidato concreto para Erion e adicionou instrumentação para identificar o caminho de Kefra:
 
-- **Portal secundário de Erion:** o legado `GetTeleportPosition` contém a origem `(2452,1988)` com destino-base `(1989,1755)` e dispersão de `0..2` em cada eixo. Essa rota estava ausente de `tmserver/internal/world/teleport.go`. A rota foi portada e recebeu teste cobrindo todas as 16 posições dentro do tile de origem e a faixa de destinos.
+- **Segundo portal de Azran:** correção do relato: o portal defeituoso fica em Azran, não em Erion. A rota legada `(2452,1716)` → `(1969,1711)` estava ausente da tabela Go. Foi portada e recebeu teste cobrindo as 16 posições dentro do tile de origem e a faixa de destinos. A rota `(2452,1988)` de Erion é uma rota legada distinta e não deve ser considerada a correção do relato de Azran.
 - **Entrada do Hall de Kefra:** o legado só teleporta da origem `(2364,3892)` quando `KefraTicket > 0`, descontando uma entrada e enviando a contagem atualizada. O handler Go já tinha esse fluxo, mas retornava silenciosamente quando não havia entradas. Agora registra um aviso explícito nesse caso.
 - **Portal do deserto para Kefra:** também depende de o estado do Kefra estar carregado e marcado como derrotado. O handler agora registra quando esse acesso é rejeitado por estado ausente/fechado.
 - **Outras falhas de correspondência:** pedidos de teleporte que não correspondam a uma rota ou condição de acesso agora geram log com a posição atual, tile arredondado e dados relevantes de acesso. Isso deve revelar se o cliente está acionando o portal numa coordenada diferente da esperada.
 
 A rota de Erion foi corrigida com base direta na tabela legada; ainda precisa passar pela CI e ser reproduzida no cliente. Para Kefra, os logs vão distinguir uma falta de entradas, estado do evento fechado e coordenada de origem que não corresponde ao portal. Não alteramos as regras de acesso para permitir entrada sem ticket nem com Kefra vivo.
+
+
+### Correção do local do portal relatado (28/10/2026)
+
+O usuário corrigiu o relato: o portal que não funciona fica em **Azran**, e não em Erion. A rota secundária de Erion adicionada anteriormente não corresponde ao local informado e foi substituída no código pela rota legada de Azran `(2452,1716)` → `(1969,1711)`. O teste de regressão também foi alterado para cobrir a origem e o destino de Azran. A rota de Erion `(2452,1988)` continua documentada como rota existente no legado, mas não é apresentada como a correção do problema relatado. A validação final depende de CI e reprodução no cliente.
