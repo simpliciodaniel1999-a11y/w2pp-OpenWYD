@@ -129,14 +129,14 @@ func TestTeleportDestAzranSecondaryPortal(t *testing.T) {
 	}
 }
 
-// Legacy GetFunc.cpp: (2364,4072) -> (1314+rand()%2,1900+rand()%2).
-func TestTeleportDestKefraReturnToDesert(t *testing.T) {
+// Legacy GetFunc.cpp: desert portal (2364,4072) -> Kefra Hall (1314+rand%2,1900+rand%2).
+func TestTeleportDestDesertToKefraHall(t *testing.T) {
 	for ox := int16(0); ox < 4; ox++ {
 		for oy := int16(0); oy < 4; oy++ {
 			x, y := int16(2364)+ox, int16(4072)+oy
 			dx, dy, cost, ok := TeleportDestWithAccess(x, y, TeleportAccess{}, rng.NewSeeded(1))
 			if !ok || cost != 0 || dx < 1314 || dx > 1315 || dy < 1900 || dy > 1901 {
-				t.Errorf("Kefra return at (%d,%d) = (%d,%d), cost=%d, ok=%v; want x=1314..1315 y=1900..1901, free", x, y, dx, dy, cost, ok)
+				t.Errorf("Desert-to-Kefra portal at (%d,%d) = (%d,%d), cost=%d, ok=%v; want x=1314..1315 y=1900..1901, free", x, y, dx, dy, cost, ok)
 			}
 		}
 	}
