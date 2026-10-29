@@ -89,3 +89,20 @@ Não integrar `nearestTeleportCell` em `doTeleport` até que:
 - os destinos e suas dispersões tenham sido verificados contra o mapa real;
 - os limites regionais usados por cada rota tenham evidência documentada;
 - testes de regressão cubram destinos válidos, bloqueados, ocupados, sem alternativa e condições de acesso.
+
+
+## Problema funcional relatado: portais que não teleportam
+
+Além da melhoria preventiva para evitar destinos inválidos, há um problema funcional relatado: **alguns portais atualmente não funcionam — o personagem entra/aciona o portal, mas não é teleportado**. Ainda não foram identificados aqui todos os portais afetados nem confirmada a causa.
+
+Esse problema deve ser investigado separadamente da validação de células seguras. Uma rota ausente da tabela Go é uma hipótese a verificar, mas não prova por si só a causa: também é necessário conferir o reconhecimento da origem, as condições de acesso/evento, a execução do pedido de teleporte e a resposta enviada ao cliente.
+
+### Procedimento de investigação
+
+1. Registrar cada portal afetado com mapa/local, coordenadas aproximadas da origem, destino esperado e condições para ativá-lo.
+2. Comparar a origem com `GetTeleportPosition` no legado e com `teleportTable`/`TeleportDestWithAccess` no Go.
+3. Seguir o fluxo de `_MSG_ReqTeleport` até `doTeleport`, verificando se o pedido chega, se a rota é encontrada e se alguma condição interrompe a operação.
+4. Adicionar testes de regressão para cada portal confirmado como defeituoso, sem alterar rotas que já funcionam.
+5. Só depois de identificar a causa, corrigir a rota ou condição específica e validar que a correção não muda os destinos válidos existentes.
+
+**Nota:** a lista de rotas marcadas como “Ausente” neste documento contém candidatas à comparação, não uma confirmação de que cada uma delas corresponde a um portal relatado como defeituoso.
