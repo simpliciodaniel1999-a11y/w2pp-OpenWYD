@@ -20,7 +20,7 @@ var teleportTable = map[[2]int16]teleRoute{
 	{2116, 2100}: {1044, 1724, 700}, // Armia → Noatum
 	{2480, 1716}: {1044, 1716, 700}, // Azran → Noatum
 	{2456, 2016}: {1044, 1708, 700}, // Erion → Noatum
-	{2452, 1988}: {1989, 1755, 0},   // Erion → Azran Field (legacy secondary portal)
+	{2452, 1716}: {1969, 1711, 0}, // Azran → Azran Field (legacy secondary portal)
 	{1044, 1724}: {2116, 2100, 0},   // Noatum → Armia
 	{1044, 1716}: {2480, 1716, 0},   // Noatum → Azran
 	{1044, 1708}: {2456, 2016, 0},   // Noatum → Erion
